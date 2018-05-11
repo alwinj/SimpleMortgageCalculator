@@ -1,0 +1,217 @@
+﻿@model MortgageCalculator.Web.Models.MortgageViewModel
+
+@{
+    ViewBag.Title = "Home Page";
+}
+
+<div class="jumbotron">
+    <h1>Mortgage Calculator</h1>
+    <p class="lead">
+        The Mortgage Calculator helps you:
+        <ul>
+            <li>Choose the right loan for you</li>
+            <li>The Interests and Repayment on your loan</li>
+        </ul>
+    </p>
+</div>
+
+
+<div class="row">
+    <div class="col-md-12">
+        @using (Html.BeginForm(null, null, FormMethod.Get, new { id = "calculateMortgageForm" }))
+        {
+            @Html.AntiForgeryToken()
+            @Html.ValidationSummary(true);
+            
+            <div class="alert alert-danger" style="display:none" id="errorLabel">&nbsp;</div>
+            <div class="form-group">
+                <label class="col-md-4 control-label" for="textinput" id="loading" style="display:none;">Loading....</label>
+            </div>
+
+    <div class="form-group" id="mainContent" style="display:none">
+        <fieldset>
+            <!-- Form Name -->
+            <legend>Mortage List (Select appropriate mortgage type and fill up the calculator form to get the total repayment and total interest to be paid)</legend>
+            <table id="jqGrid" class="table .table-bordered .table-hover">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Mortgage Type</th>
+                        <th>Interest Repayment</th>
+                        <th>Interest Rate</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </fieldset>
+
+        <fieldset>
+            <legend>Mortgage Calculator</legend>
+            <!-- Text input-->
+            <div class="row">
+                <div class="col-md-5">
+                    @Html.LabelFor(model => model.Amount, new { @class = "col-md-5 control-label" })
+                </div>
+                <div class="col-md-5">
+                    @Html.TextBoxFor(model => model.Amount, new { @class = "form-control input-md", @type = "number", @step = "any" })
+                    @Html.ValidationMessageFor(model => model.Amount, string.Empty, new { @class="text-danger" })
+                    <span class="help-block">Enter the amount to borrow</span>
+                </div>
+                <div class="col-md-5">
+                    @Html.LabelFor(model => model.TermsInMonths, new { @class = "col-md-5 control-label" })
+                </div>
+                <div class="col-md-5">
+                    @Html.TextBoxFor(model => model.TermsInMonths, new { @class = "form-control input-md", @type = "number" })
+                    @Html.ValidationMessageFor(model => model.TermsInMonths, string.Empty, new { @class = "text-danger" })
+                    <span class="help-block">Enter the number of months</span>
+                </div>
+                <div class="col-md-5 center-block">
+                    <input type="submit" value="Calculate" />
+                </div>
+            </div>
+        </fieldset>
+            <div class="row">
+                <div class="col-md-5">
+                    @Html.LabelFor(model => model.TotalLoanRepayment, new { @class = "col-md-5 control-label" })
+                </div>
+                <div class="col-md-5">
+                    @Html.TextBoxFor(model => model.TotalLoanRepayment, new { @class = "form-control input-md", @type = "number", @readonly = "readonly" })
+                </div>
+
+                <div class="col-md-5">
+                    @Html.LabelFor(model => model.TotalInterestRepayment, new { @class = "col-md-5 control-label" })
+                </div>
+                <div class="col-md-5">
+                    @Html.TextBoxFor(model => model.TotalInterestRepayment, new { @class = "form-control input-md", @type = "number", @readonly = "readonly" })
+                </div>
+            </div>
+        </div>
+
+        }
+    </div>
+</div>
+
+@section Scripts {
+    @Scripts.Render("~/bundles/jqueryval")
+    
+    <script type="text/javascript">
+        var api = 'http://localhost:81/api/mortgage/';
+
+        /* Ignore readonly and hidden fields as its logically not required for them to be validated */
+        $.validator.setDefaults({
+            ignore: ':hidden, [readonly=readonly]'
+        });
+
+        $(document).ready(function () {
+            
+            $("#loading").show();
+
+            $.ajax({
+                url: api,
+                type: 'GET',
+                dataType: 'json',
+                crossDomain: true,
+                headers: 'Access-Control-Request-Headers:*',
+                success: function (data, textStatus, xhr) {
+                    $("#loading").hide();
+                    $("#errorLabel").hide();
+                    $("#mainContent").show();
+
+                    //Dispaly the list of mortgages
+                    showMortgageTable(data);
+                },
+                error: function (xhr, textStatus, errorThrown) {
+                    $("#loading").hide();
+                    $("#mainConent").hide();
+
+                    showError(errorThrown);
+                }
+            });
+        });
+
+        function showMortgageTable(data) {
+            let dynamicGrid = '';
+
+            $("#jqGrid tbody").empty();
+
+            $.each(data, function (key, value) {
+                dynamicGrid = '<tr style=\'cursor: pointer;\'>';
+                    dynamicGrid += '<td name=\'MortgageName\'>';
+                        dynamicGrid += value.Name;
+                    dynamicGrid += '</td>';
+                    dynamicGrid += '<td name=\'MortgageType\'>';
+                        dynamicGrid += value.MortgageType;
+                    dynamicGrid += '</td>';
+                    dynamicGrid += '<td name=\'InterestRepayment\'>';
+                        dynamicGrid += value.InterestRepayment;
+                    dynamicGrid += '</td>';
+                    dynamicGrid += '<td name=\'InterestRate\'>';
+                        dynamicGrid += value.InterestRate;
+                    dynamicGrid += '</td>';
+                dynamicGrid += '</tr>';
+
+                $("#jqGrid tbody").append(dynamicGrid);
+            });
+        }
+
+        $('#jqGrid').on('click', 'tbody tr', function (event) {
+            $(this).addClass('success').siblings().removeClass('success');
+        });
+
+        $("#calculateMortgageForm").submit(function (event) {
+            
+            event.preventDefault();
+
+            /* Validate the input */
+            if (!$('form').valid())
+            {
+                return false;
+            }
+
+            let cols = $("#jqGrid tbody").find('tr.success td');
+            let param = [];
+
+            $.each(cols, function (idx, col) {
+                param.push($(col).text());
+            });
+
+            //Validate whether any selection of the loan has been made or not
+            if (param.length == 0) {
+                let errorMsg = 'Please select mortgage type from the list';
+                showError(errorMsg);
+                return false;
+            }
+
+            $.ajax({
+                url: api + 'calculate',
+                type: 'POST',
+                data: { "MortgageType": param[1], "InterestRate": param[3], "LoanAmount": $("#Amount").val(), "TermsInMonths": $("#TermsInMonths").val() },
+                dataType: 'json',
+                crossDomain: true,
+                contentType: 'application/x-www-form-urlencoded',
+                headers: 'Access-Control-Request-Headers:*',
+                success: function (data, textStatus, xhr) {
+                    $("#errorLabel").hide();
+                    console.log($(data.TotalLoanRepayment));
+                    console.log($(data.TotalInterestRepayment));
+
+                    $("#TotalLoanRepayment").val(data.TotalLoanRepayment.toString());
+                    $("#TotalInterestRepayment").val(data.TotalInterestRepayment.toString());
+                },
+                error: function (xhr, textStatus, errorThrown) {
+                    showError(errorThrown);
+                }
+            });
+        });
+
+        function showError(msg)
+        {
+            window.scrollTo(0, 0);
+
+            let errorMsg = '<strong>Error!</strong>' + msg;
+            $("#errorLabel").empty();
+            $("#errorLabel").show();
+            $("#errorLabel").html(errorMsg);
+        }
+    </script>
+}

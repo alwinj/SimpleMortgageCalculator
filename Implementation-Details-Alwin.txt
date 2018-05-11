@@ -1,0 +1,37 @@
+Please find the below implementation details
+
+Web API
+ - Cleaned up the code 
+ - Used AutoMapper for mapping of the data to DTO
+ - Used Dependency Injection Resolver package (StructureMap)
+ - Used Json.Net for converting the default response behavior from XML to JSON 
+ - Used EnableCORS for allowing Same origin resource sharing request as WEB API consumed by MVC app
+
+  (Note: I used .NET reflector tool to check the source code of the MortgageData.dll)
+
+DTO
+ - Added new fields
+
+Unit Test
+ - As already delayed submitting the proejct code hence didn't wrote it.
+
+Web MVC
+ - When the page loads it will call API Get method to get the mortgage types and displays it
+ - User can hover over the list and select the row
+ - User can enter the loan amount and loan duration in months
+ - User will post the loan requested details to the API as POST which in turn calculates the total repayment of the loan and total interest.
+
+ (Note: 
+	Both Fixed and Variable interest has been handled in the same way
+	jQuery is used as a scripting library
+        ajax call are called for both GET And POST method call)
+
+
+
+Deployment Details
+------------------
+1. Build the entire solution
+2. Deploy the web api in the IIS with port number 81
+3. Deploy the MVC app in the IIS with port number 52187
+
+(Note: In case port number are being changed. Please make sure to update the port number in the MortgageCalculator of Web API and script section of Index.cshtml)

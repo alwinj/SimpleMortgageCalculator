@@ -1,0 +1,5 @@
+D:\Project\MortgageCalculator\MortgageCalculator.Dto\bin\Release\MortgageCalculator.Dto.dll
+D:\Project\MortgageCalculator\MortgageCalculator.Dto\bin\Release\MortgageCalculator.Dto.pdb
+D:\Project\MortgageCalculator\MortgageCalculator.Dto\obj\Release\MortgageCalculator.Dto.csprojResolveAssemblyReference.cache
+D:\Project\MortgageCalculator\MortgageCalculator.Dto\obj\Release\MortgageCalculator.Dto.dll
+D:\Project\MortgageCalculator\MortgageCalculator.Dto\obj\Release\MortgageCalculator.Dto.pdb
